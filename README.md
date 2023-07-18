@@ -14,11 +14,10 @@ This is a simple app that demonstrates how to expose a token and pass it through
 3. Add valid initial token to constants file.
 
 ### Usage
-0. Replace `urlString` with the base url you want to use.
 1. Open the project in Xcode.
 2. Build and run the app on the iOS simulator or a physical device.
 3. The app will launch and display a prompt.
-4. Enter your initial token in the prompt.
+4. Enter your initial token and baseURL (stage as default).
 5. The WebView will load a webpage using the provided token for authentication.
 6. Make sure your token has opt in flow, go to wallet view to start "authentication" flow.
 7. Tap on the continue button, a window will be displayed intercepting the javascript.

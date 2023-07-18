@@ -11,6 +11,7 @@
 
 @property (nonatomic, strong) WKWebView *webView;
 @property (nonatomic, strong) NSString *token;
+@property (nonatomic, strong) NSString *baseURL;
 
 @end
 
@@ -37,7 +38,7 @@
     [self.view addSubview:self.webView];
     
     // Prompt for a token before executing other actions
-    [self promptForTokenWithCompletion:^(NSString *token) {
+    [self promptForTokenWithCompletion:^(NSString *token, NSString *baseURL) {
         if (token) {
             // Handle the token as needed
 
@@ -45,7 +46,7 @@
             self.webView.alpha = 1.0;
 
             // Load a web page in the WKWebView
-            NSString *urlString = [NSString stringWithFormat:@"https://cloud.almostflip.com/?token=%@", token];
+            NSString *urlString = [NSString stringWithFormat:@"%@/?token=%@", baseURL, token];
             NSURL *url = [NSURL URLWithString:urlString];
             NSURLRequest *request = [NSURLRequest requestWithURL:url];
             [self.webView loadRequest:request];
@@ -61,7 +62,7 @@
     NSString *messageBody = (NSString *)message.body;
     NSLog(@"Received message from JavaScript: %@", messageBody);
     
-    [self promptForTokenWithCompletion:^(NSString *token) {
+    [self promptForTokenWithCompletion:^(NSString *token, NSString *baseURL) {
         if (token) {
             NSString *jsCallback = [NSString stringWithFormat:@"window.updateToken('%@')", token];
 
@@ -78,31 +79,38 @@
     }];
 }
 
-- (void)promptForTokenWithCompletion:(void (^)(NSString *))completion {
+- (void)promptForTokenWithCompletion:(void (^)(NSString *, NSString *))completion {
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Enter Token"
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"Enter Token and Base URL"
                                                                                  message:nil
                                                                           preferredStyle:UIAlertControllerStyleAlert];
         [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
             textField.placeholder = @"Token";
         }];
+        [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+            textField.placeholder = @"Base URL";
+            textField.text = @"https://cloud.almostflip.com"; // Set the default value for base URL
+        }];
+        
         UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
             UITextField *tokenTextField = alertController.textFields.firstObject;
+            UITextField *baseURLTextField = alertController.textFields.lastObject;
             NSString *token = tokenTextField.text;
-            completion(token);
+            NSString *baseURL = baseURLTextField.text;
+            completion(token, baseURL);
         }];
+        
         [alertController addAction:okAction];
-
         [self presentViewController:alertController animated:YES completion:nil];
     });
 }
 
-- (void)loadWebViewWithToken:(NSString *)token {
+- (void)loadWebViewWithToken:(NSString *)token baseURL:(NSString *)baseURL {
     if (token) {
         // Add your code to handle the token as needed
         
         // Construct the URL with the token as a parameter
-        NSString *urlString = [NSString stringWithFormat:@"https://cloud.almostflip.com/?token=%@", token];
+        NSString *urlString = [NSString stringWithFormat:@"%@/?token=%@", baseURL, token];
         NSURL *url = [NSURL URLWithString:urlString];
         NSURLRequest *request = [NSURLRequest requestWithURL:url];
         
