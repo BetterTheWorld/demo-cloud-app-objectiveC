@@ -62,21 +62,31 @@
     NSString *messageBody = (NSString *)message.body;
     NSLog(@"Received message from JavaScript: %@", messageBody);
     
-    [self promptForTokenWithCompletion:^(NSString *token, NSString *baseURL) {
-        if (token) {
-            NSString *jsCallback = [NSString stringWithFormat:@"window.updateToken('%@')", token];
+    if ([messageBody isEqualToString:@"USER_DATA_REQUIRED"]) {
+        [self promptForTokenWithCompletion:^(NSString *token, NSString *baseURL) {
+            if (token) {
+                NSString *jsCallback = [NSString stringWithFormat:@"window.updateToken('%@')", token];
 
-            // Evaluate the JavaScript callback in the web view
-            [self.webView evaluateJavaScript:jsCallback completionHandler:^(id result, NSError *error) {
-                if (error) {
-                    NSLog(@"JavaScript execution error: %@", error.localizedDescription);
-                } else {
-                    NSLog(@"JavaScript executed successfully");
-                    // Additional code to handle success if needed
-                }
-            }];
+                // Evaluate the JavaScript callback in the web view
+                [self.webView evaluateJavaScript:jsCallback completionHandler:^(id result, NSError *error) {
+                    if (error) {
+                        NSLog(@"JavaScript execution error: %@", error.localizedDescription);
+                    } else {
+                        NSLog(@"JavaScript executed successfully");
+                        // Additional code to handle success if needed
+                    }
+                }];
+            }
+        }];
+    }
+    
+    if ([messageBody containsString:@"OPEN_IN_BROWSER::"]) {
+        NSString *urlPayload = [messageBody stringByReplacingOccurrencesOfString:@"OPEN_IN_BROWSER::" withString:@""];
+        NSURL *url = [NSURL URLWithString:urlPayload];
+        if (url) {
+            [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
         }
-    }];
+    }
 }
 
 - (void)promptForTokenWithCompletion:(void (^)(NSString *, NSString *))completion {
